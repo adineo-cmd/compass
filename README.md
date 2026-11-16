@@ -1,133 +1,101 @@
-# Compass — Career roadmaps for non-tech fields
+<div align="center">
 
-A free, open, **roadmap.sh-style website for non-tech careers**: accounting, HR, marketing,
-sales, project management, supply chain, healthcare, teaching, law, and psychology — with a
-careers library grounded in the [O*NET-SOC](https://www.onetonline.org/) taxonomy and fields
-of study mapped to the [JEL classification](https://www.aeaweb.org/econlit/jelCodes).
+# Compass
 
-**No login. No accounts. No tracking.** Progress is saved in your browser's local storage.
+**Step-by-step career roadmaps for non-tech fields.**
 
-> Inspired by [roadmap.sh](https://roadmap.sh), which does this brilliantly for software
-> roles. Compass applies the same interactive roadmap-graph idea to the rest of the job
-> market. (A fork-style reference of developer-roadmap lives at
-> [nilbuild/developer-roadmap](https://github.com/nilbuild/developer-roadmap).)
+[![Live site](https://img.shields.io/badge/live-site-2ea44f?logo=githubpages&logoColor=white)](https://adineo-cmd.github.io/compass/)
+![Astro](https://img.shields.io/badge/Astro-BC52EE?logo=astro&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black) ![D3](https://img.shields.io/badge/D3.js-F9A03C?logo=d3&logoColor=white) ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/Actions-2088FF?logo=githubactions&logoColor=white)
+
+[![Stars](https://img.shields.io/github/stars/adineo-cmd/compass?style=flat&logo=github&label=stars)](https://github.com/adineo-cmd/compass/stargazers) [![Last commit](https://img.shields.io/github/last-commit/adineo-cmd/compass?style=flat)](https://github.com/adineo-cmd/compass/commits)
+
+[Live site](https://adineo-cmd.github.io/compass/) · [Quick start](#quick-start) · [How it works](#how-it-works) · [Features](#features)
+
+</div>
 
 ---
 
+Compass applies the roadmap.sh idea to the rest of the job market: **40 career
+roadmaps, 928 interactive topics and 143 occupations** across 21 O*NET-SOC
+families, with fields of study mapped to JEL codes.
+
+No login, no accounts, no tracking. Progress lives in your browser.
+
+## Features
+
+| | Feature | What it does |
+| --- | --- | --- |
+| 🗺️ | **40 roadmaps** | 928 topics, each with notes, skills, certifications and resources. |
+| 🌌 | **Two views** | An OSINT-style radial tree and a classic roadmap.sh-style graph. |
+| 💼 | **143 occupations** | Linked to the official O*NET-SOC summary for each role. |
+| 🔎 | **Global search** | Roadmaps, topics and occupations from one search box. |
+
+## How it works
+
+Content is JSON; both the site and the standalone server read the same data:
+
+1. `content/roadmaps/*.json` and `content/careers/*.json` hold the authored data.
+2. `scripts/seed.py` builds `data/roadmap.db` (SQLite, standard library only).
+3. `python3 server.py` serves the zero-dependency version on port 8080.
+4. `npm run dev` runs the Astro version, with `predev` seeding the database and
+   freezing the content for the browser.
+
+```mermaid
+flowchart LR
+  A[content/roadmaps/*.json] --> C[scripts/seed.py]
+  B[content/careers/*.json] --> C
+  C --> D[(data/roadmap.db)]
+  D --> E[server.py :8080]
+  D --> F[scripts/freeze.py]
+  F --> G[Astro + public/js]
+  G --> H[D3 radial tree and graph]
+```
+
 ## Quick start
 
-Requires only **Python 3.8+** (standard library only — no pip installs).
+**Install and run**
 
 ```bash
-python3 scripts/seed.py     # build data/roadmap.db from content/*.json (SQLite)
-python3 server.py           # serve at http://127.0.0.1:8080  (PORT env to change)
+npm install
+npm run dev
 ```
 
-Open **http://127.0.0.1:8080**.
-
-Optional checks:
+**Production build**
 
 ```bash
-python3 scripts/validate.py # validate all roadmap content against the schema
+npm run build
+npm run preview
 ```
 
-## What's inside
+## Project structure
 
-| Section | Description |
-| --- | --- |
-| **40 career roadmaps** | 928 interactive topics. Every roadmap renders in **two views**: an OSINT Framework-style **D3.js radial tree** (default — collapsible, clickable, zoom/pan, touch-friendly) and the classic roadmap.sh-style SVG graph. Clicking any node opens its notes in a right-side drawer |
-| **Topic drawer** | What it is, why it matters, a learning checklist, skills, certifications, resources, related O*NET occupations |
-| **Explorer (D3.js)** | OSINT Framework–style collapsible radial tree over everything: roadmaps → stages → topics, O*NET families → occupations, JEL categories → codes. Zoom, pan, touch-friendly | 
-| **Careers library** | 143 occupations across 21 O*NET-SOC families, each linking to its official O*NET summary page (IT & engineering intentionally excluded) |
-| **Fields of study** | Roadmaps mapped to JEL classification codes (M41 Accounting, I21 Education, K12 Contract Law…) |
-| **Global search** | Roadmaps, topics, and occupations from the header |
-
-### Roadmaps included
-
-Accounting & Finance · Human Resources · Digital Marketing · Sales & Business Development ·
-Project Management · Supply Chain & Logistics · Healthcare Careers · Teaching & Education ·
-Law & Legal Careers · Psychology & Counseling · Management & Leadership · Skilled Trades ·
-Culinary & Hospitality · Public Safety & Security · Beauty & Personal Care ·
-Agriculture & Environment · Arts, Media & Design · Sports & Fitness ·
-Government & Public Policy · Transportation & Driving · Real Estate · Insurance ·
-Banking & Financial Services · Veterinary & Animal Care · Libraries, Museums & Archives ·
-Events & Tourism · Fashion & Apparel · Military & Defense
-
-**Deeper niche paths** nest inside families via a `parent` field (12 total): Fire Service,
-Police & Law Enforcement (under Public Safety), Skincare & Esthetics (under Beauty), Nursing,
-Dental, Pharmacy, Paramedic & EMT (under Healthcare), Electrician, Plumbing & Pipefitting,
-HVAC & Refrigeration (under Skilled Trades), Social Work (under Psychology), Baking & Pastry
-(under Culinary).
-
-## Architecture
-
-```
-compass/
-├── server.py               # zero-dependency HTTP server (stdlib http.server) + JSON API
-├── scripts/
-│   ├── seed.py             # content/*.json  →  SQLite (data/roadmap.db)
-│   └── validate.py         # schema + geometry validator for roadmap content
-├── content/                # the "source of truth" — versionable JSON
-│   ├── SPEC.md             # roadmap content spec (schema, layout, quality bar)
-│   ├── roadmaps/*.json     # 10 roadmaps: nodes with x/y geometry, edges, details
-│   ├── careers/onetsoc.json# O*NET-SOC 2019/2024 careers library
-│   └── jel.json            # JEL classification mapping
-├── data/roadmap.db         # generated SQLite database (rebuilt by seed.py)
-├── public/                 # vanilla JS SPA (no build step)
-│   ├── index.html
-│   ├── css/style.css       # dark roadmap.sh-inspired theme + mobile rules
-│   ├── vendor/d3.min.js    # vendored D3 v7 (no CDN dependency)
-│   └── js/                 # router, SVG renderer, D3 tree explorer, views, icons
+```text
+content/roadmaps/   40 roadmap JSON files
+content/careers/    occupations and fields of study
+scripts/            seed, freeze and validate
+src/pages/          Astro entry
+public/js/          D3 radial tree, graph and search
+server.py           dependency-free local server
 ```
 
-**Mobile:** the roadmap SVG scrolls horizontally at full legibility on phones (the roadmap.sh pattern), the drawer goes full-width, navigation becomes a swipeable row, and the Explorer supports pinch-zoom and touch dragging.
+## Deployment
 
-**Why a database?** All content lives in auditable JSON, gets validated
-(`scripts/validate.py`), and is loaded into SQLite (`data/roadmap.db`). The API reads from
-the database — so you get real queries (search across 307 topics + 139 occupations in SQL)
-while the content stays diff-able in version control.
+Every push to `main` builds the site and deploys it to GitHub Pages
+through `.github/workflows/deploy.yml`:
 
-### API
+**https://adineo-cmd.github.io/compass/**
 
-| Endpoint | Returns |
-| --- | --- |
-| `GET /api/roadmaps` | roadmap list with metadata |
-| `GET /api/roadmaps/{slug}` | full roadmap: items + edges + details |
-| `GET /api/careers` | O*NET families and occupations |
-| `GET /api/fields` | JEL codes with roadmap mappings |
-| `GET /api/search?q=` | roadmaps, topics, careers matching a query |
-| `GET /api/health` | liveness |
+## Two ways to run it
 
-## Content verification methodology
+```bash
+# Zero dependencies (Python standard library only)
+python3 scripts/seed.py
+python3 server.py                 # http://127.0.0.1:8080
 
-- **Occupation codes** were checked against live O*NET OnLine summary pages
-  (O*NET-SOC current release); retired codes found during verification were replaced
-  (e.g. 21-1018 → 21-1011/21-1014, 25-9045 → 25-9042, 29-2041 → 29-2042/29-2043,
-  19-3031 → 19-3033, 29-1124 → 29-9091 for athletic trainers, 41-4011 → 41-4012,
-  45-2021 title corrected to Animal Breeders).
-- **Certifications** are stated only where requirements are public at the issuing body
-  (CPA Evolution model: 3 Core + 1 Discipline sections — verified via NASBA/AICPA;
-  PMP: 36/60 months leading projects + 35 contact hours or active CAPM — verified via PMI).
-- **No salary figures** anywhere; roadmaps link to the BLS Occupational Outlook Handbook
-  instead so numbers stay current.
-- **Resources** favor free, stable sources (Khan Academy, OpenStax, MIT OCW, official
-  certification-body pages, government sites).
+# Astro development build
+npm install
+npm run dev
+```
 
-## Adding a roadmap
-
-1. Copy the shape of any file in `content/roadmaps/` (see `content/SPEC.md` for the full
-   schema, geometry conventions, and content rules).
-2. Add groups/labels/edges; keep nodes on the 5-column grid (x = 60/340/620/900/1180).
-3. Run `python3 scripts/validate.py` until clean.
-4. Run `python3 scripts/seed.py` and restart the server (or just re-run seed — the server
-   opens a fresh connection per request).
-
-## Credits & data licenses
-
-- [O*NET OnLine](https://www.onetonline.org/) — U.S. Department of Labor; public domain / CC BY 4.0.
-- [JEL Classification](https://www.aeaweb.org/econlit/jelCodes) — American Economic Association.
-- [Data-driven skills taxonomy](https://github.com/maudgrol/Data_driven_skills_taxonomy) — naming conventions reference.
-- [roadmap.sh](https://roadmap.sh) — design inspiration (kamranahmedse/developer-roadmap).
-- BLS Occupational Outlook Handbook — linked for occupational data.
-
-Everything authored in `content/` is original work written for this project.
+Validate all roadmap content against the schema with
+`python3 scripts/validate.py`.
